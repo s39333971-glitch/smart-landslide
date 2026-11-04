@@ -1,0 +1,891 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Landslide Monitoring & Early Warning System</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #0b111e;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 16px 20px;
+      user-select: none;
+    }
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #1e293b;
+      gap: 12px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .title {
+      font-size: 19px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .live-dot {
+      width: 9px;
+      height: 9px;
+      background-color: #22d3ee;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #22d3ee;
+    }
+    .tag-can {
+      background: #131d2e;
+      border: 1px solid rgba(34, 211, 238, 0.3);
+      color: #22d3ee;
+      font-family: monospace;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 9999px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: monospace;
+      font-size: 11px;
+    }
+    .lang-btn {
+      background: rgba(34, 211, 238, 0.15);
+      border: 1px solid #22d3ee;
+      color: #22d3ee;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .lang-btn:hover {
+      background: #22d3ee;
+      color: #0b111e;
+    }
+    .badge-lora {
+      background: rgba(6, 78, 59, 0.4);
+      color: #34d399;
+      border: 1px solid rgba(5, 150, 105, 0.4);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .badge-battery {
+      background: #131d2e;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .badge-lid {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .siren-off {
+      background: #131d2e;
+      color: #34d399;
+      border: 1px solid rgba(5, 150, 105, 0.5);
+    }
+    .siren-on {
+      background: rgba(136, 19, 55, 0.4);
+      color: #fb7185;
+      border: 1px solid rgba(225, 29, 72, 0.5);
+    }
+
+    /* Dynamic Cards Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: #131d2e;
+      border: 1px solid #1e2d42;
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 125px;
+      overflow: hidden;
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .pill {
+      font-family: monospace;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .val-large {
+      font-size: 30px;
+      font-weight: 800;
+      font-family: monospace;
+      margin: 6px 0;
+      line-height: 1.1;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .val-unit {
+      font-size: 16px;
+      font-weight: 500;
+      color: #64748b;
+    }
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10.5px;
+      color: #64748b;
+      border-top: 1px solid #1e293b;
+      padding-top: 6px;
+      margin-top: 2px;
+    }
+
+    /* Main Chart and Controls Layout */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 850px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .graph-card {
+      background: #131d2e;
+      border: 1px solid #1e2d42;
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .graph-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .graph-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #cbd5e1;
+      font-family: monospace;
+      text-transform: uppercase;
+    }
+    .crit-limit {
+      font-size: 10.5px;
+      font-family: monospace;
+      color: #fb7185;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .crit-line {
+      width: 12px;
+      height: 2px;
+      background: #f43f5e;
+      display: inline-block;
+    }
+    canvas {
+      width: 100% !important;
+      height: 160px !important;
+      background: #0d1522;
+      border-radius: 6px;
+    }
+
+    .actuator-card {
+      background: #131d2e;
+      border: 1px solid #1e2d42;
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .btn {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 7px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      transition: 0.15s;
+    }
+    .btn-boost {
+      background: rgba(6, 182, 212, 0.12);
+      color: #67e8f9;
+      border: 1px solid rgba(6, 182, 212, 0.35);
+    }
+    .btn-boost.active {
+      background: #06b6d4;
+      color: #000;
+      font-weight: bold;
+    }
+    .btn-lid {
+      background: rgba(16, 185, 129, 0.12);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+    .btn-lid.open {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fda4af;
+      border: 1px solid rgba(244, 63, 94, 0.45);
+    }
+    .btn-sim {
+      background: rgba(136, 19, 55, 0.2);
+      color: #fb7185;
+      border: 1px solid rgba(225, 29, 72, 0.3);
+    }
+    .btn-sim.spiking {
+      background: #e11d48;
+      color: #ffffff;
+    }
+
+    .audit-card {
+      background: #131d2e;
+      border: 1px solid #1e2d42;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .audit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 5px;
+      margin-bottom: 6px;
+    }
+    .log-box {
+      font-family: monospace;
+      font-size: 10.5px;
+      color: #94a3b8;
+      max-height: 75px;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="header">
+    <div class="header-left">
+      <h1 class="title" id="uiTitle">
+        <span class="live-dot"></span>
+        Smart Landslide Monitoring & Early Warning System
+      </h1>
+      <span class="tag-can">NODE #DARJ-HILL-04</span>
+    </div>
+
+    <div class="header-right">
+      <button class="lang-btn" onclick="toggleLanguage()" id="langBtn">🌐 বাংলা</button>
+      <span class="badge-lora" id="uiLoraBadge">● LoRaWAN Active</span>
+      <span class="badge-battery">🔋 98% (Solar+LiFePO4)</span>
+      <span id="headerSirenBadge" class="badge-lid siren-off">📢 Siren: STANDBY</span>
+    </div>
+  </header>
+
+  <!-- 4 Main Telemetry Cards -->
+  <section class="metrics-grid">
+    <!-- Slope Tilt -->
+    <div class="card">
+      <div class="card-top">
+        <span id="uiLabelTilt">Slope Displacement / Tilt</span>
+        <span id="tiltStateBadge" class="pill" style="background:#082f49; color:#38bdf8; border:1px solid #0369a1;">Gyro: Stable</span>
+      </div>
+      <div class="val-large" style="color:#38bdf8;">
+        <span id="tiltDisplay">1.12</span>
+        <span class="val-unit">°</span>
+      </div>
+      <div class="card-footer">
+        <span id="uiTargetTilt">Threshold: &le; 5.0°</span>
+        <span id="tiltTrend" style="color:#38bdf8; font-family:monospace;">No Structural Shift</span>
+      </div>
+    </div>
+
+    <!-- Soil Moisture -->
+    <div class="card">
+      <div class="card-top">
+        <span id="uiLabelMoisture">Soil Moisture Saturation</span>
+        <span id="moistureStatusBadge" class="pill" style="background:#064e3b; color:#34d399; border:1px solid #059669;">Moisture: Normal</span>
+      </div>
+      <div class="val-large" style="color:#ffffff;">
+        <span id="moistureDisplay">38.4</span>
+        <span class="val-unit">%</span>
+      </div>
+      <div class="card-footer">
+        <span id="uiMoistureRange">Safe Range: &le; 65.0%</span>
+        <span id="moistureSubText" style="color:#94a3b8;">Soil Matrix Firm</span>
+      </div>
+    </div>
+
+    <!-- Rainfall Intensity -->
+    <div class="card">
+      <div class="card-top">
+        <span id="uiLabelRain">Rainfall Intensity</span>
+        <span id="rainRateBadge" class="pill" style="background:#1e293b; color:#cbd5e1;">LIGHT RAIN</span>
+      </div>
+      <div class="val-large" style="color:#ffffff;">
+        <span id="rainDisplay">12.5</span>
+        <span class="val-unit">mm/h</span>
+      </div>
+      <div class="card-footer">
+        <span id="uiRainModel">Hydrological Cumulative</span>
+        <span id="rainSubText" style="color:#34d399; font-family:monospace;">No Runoff Risk</span>
+      </div>
+    </div>
+
+    <!-- Landslide Risk Index -->
+    <div class="card">
+      <div class="card-top">
+        <span id="uiLabelRisk">Landslide Risk Index</span>
+        <span id="riskBadge" class="pill" style="background:#064e3b; color:#34d399; border:1px solid #059669;">LOW RISK</span>
+      </div>
+      <div class="val-large" style="color:#34d399;">
+        <span id="riskScore">12</span>
+        <span class="val-unit">/ 100</span>
+      </div>
+      <div class="card-footer">
+        <span id="uiPorePressure">Pore Pressure Sensor</span>
+        <span id="strataStatus" style="color:#94a3b8; font-family:monospace;">Strata Shear Normal</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Realtime Graph & Emergency Controls -->
+  <section class="main-grid">
+    <div class="graph-card">
+      <div class="graph-header">
+        <span class="graph-title" id="uiGraphTitle">Realtime Displacement & Tilt Trend (Last 60 Mins)</span>
+        <span class="crit-limit"><span class="crit-line"></span> <span id="uiCritLimit">5.0° Critical Slip Threshold</span></span>
+      </div>
+      <canvas id="thermalChart"></canvas>
+      <div class="card-footer" style="margin-top:8px;">
+        <span style="font-family:monospace;" id="uiHysteresis">MPU6050 + Inclinometer Fusion Filter</span>
+        <span style="color:#38bdf8; font-family:monospace;" id="uiSamplingEff">Telemetry Interval: 500ms</span>
+      </div>
+    </div>
+
+    <div class="actuator-card">
+      <div>
+        <div class="graph-title" id="uiActuatorTitle" style="margin-bottom:10px;">Emergency Warning Controls</div>
+        <button id="drainageBtn" onclick="toggleDrainagePump()" class="btn btn-boost">⚡ Engage Auto Drainage Pump</button>
+        <button id="sirenBtn" onclick="toggleSiren()" class="btn btn-lid">🔊 Trigger Field Alarm Siren</button>
+        <button id="simFaultBtn" onclick="toggleSimulateFault()" class="btn btn-sim">⚠️ Simulate Landslide Shift</button>
+      </div>
+      <p id="uiMqttNote" style="font-size:10.5px; color:#64748b; line-height:1.35; border-top:1px solid #1e293b; padding-top:8px; margin-top:6px;">
+        Alerts are broadcasted via LoRa gateway and encrypted MQTT to District Disaster Management Cell.
+      </p>
+    </div>
+  </section>
+
+  <!-- Live Audit Telemetry Log -->
+  <footer class="audit-card">
+    <div class="audit-header">
+      <span style="font-size:10.5px; font-family:monospace; font-weight:bold; color:#94a3b8; text-transform:uppercase;" id="uiAuditTitle">Geotechnical Telemetry Audit Log</span>
+      <span id="logStatusTag" style="font-size:10.5px; font-family:monospace; color:#38bdf8;">Telemetry Status: Nominal</span>
+    </div>
+    <div id="logContainer" class="log-box">
+      <div>[12:00:04 AM] SYSTEM: Field station node initialized (ESP32-S3 LoRaWAN).</div>
+      <div>[12:01:15 AM] TELEMETRY: Inclinometer calibrated. Surface pore pressure baseline = 1.02 kPa.</div>
+    </div>
+  </footer>
+
+  <script>
+    let currentTilt = 1.12;
+    let currentMoisture = 38.4;
+    let currentRain = 12.5;
+    let isSirenOn = false;
+    let isPumpOn = false;
+    let isShiftSim = false;
+    let isBengali = false;
+
+    let historyData = [1.05, 1.08, 1.10, 1.12, 1.14, 1.12, 1.11, 1.13, 1.12, 1.15, 1.14, 1.12, 1.13, 1.12, 1.12];
+
+    const dict = {
+      en: {
+        btn: "🌐 বাংলা",
+        title: "Smart Landslide Monitoring & Early Warning System",
+        loraBadge: "● LoRaWAN Active",
+        labelTilt: "Slope Displacement / Tilt",
+        targetTilt: "Threshold: ≤ 5.0°",
+        labelMoisture: "Soil Moisture Saturation",
+        moistureRange: "Safe Range: ≤ 65.0%",
+        labelRain: "Rainfall Intensity",
+        unitRain: "mm/h",
+        rainModel: "Hydrological Cumulative",
+        labelRisk: "Landslide Risk Index",
+        porePressure: "Pore Pressure Sensor",
+        graphTitle: "Realtime Displacement & Tilt Trend (Last 60 Mins)",
+        critLimit: "5.0° Critical Slip Threshold",
+        hysteresis: "MPU6050 + Inclinometer Fusion Filter",
+        samplingEff: "Telemetry Interval: 500ms",
+        actuatorTitle: "Emergency Warning Controls",
+        pumpBtnNormal: "⚡ Engage Auto Drainage Pump",
+        pumpBtnActive: "⚡ Auto Drainage Active (De-watering)",
+        sirenBtnOff: "🔊 Trigger Field Alarm Siren",
+        sirenBtnOn: "🚨 Alarm Active (Tap to Mute)",
+        simBtnNormal: "⚠️ Simulate Landslide Shift",
+        simBtnActive: "🚨 Restoring Slope Telemetry...",
+        mqttNote: "Alerts are broadcasted via LoRa gateway and encrypted MQTT to District Disaster Management Cell.",
+        auditTitle: "Geotechnical Telemetry Audit Log",
+        cmdNormal: "Telemetry Status: Nominal",
+        
+        gyroStable: "Gyro: Stable",
+        gyroActive: "Drain Active",
+        gyroWarning: "SLOPE MOVING",
+        gyroCritical: "CRITICAL SLIP",
+        trendStable: "No Structural Shift",
+        trendDrift: "Minor Creep Detected",
+        trendFast: "Pumping Surface Water",
+        trendSpike: "MASSIVE SUBSIDENCE!",
+
+        moistureNormal: "Moisture: Normal",
+        moistureSaturated: "Moisture: High",
+        moistureCritical: "Moisture: CRITICAL",
+        soilFirm: "Soil Matrix Firm",
+        soilSoftening: "Shear Strength Dropping",
+        soilLiquefaction: "SOIL LIQUEFACTION RISK!",
+
+        rainLight: "LIGHT RAIN",
+        rainMod: "MODERATE RAIN",
+        rainHeavy: "HEAVY DOWNPOUR",
+        noRunoff: "No Runoff Risk",
+        runoffRising: "Runoff Increasing",
+        runoffHigh: "High Hydro-saturation",
+
+        riskLow: "LOW RISK",
+        riskMed: "MODERATE RISK",
+        riskHigh: "HIGH RISK",
+        strataNormal: "Strata Shear Normal",
+        strataStress: "Pore Pressure Rising",
+        strataAnomaly: "⚠️ Landslide Imminent!",
+
+        sirenStandbyBadge: "📢 Siren: STANDBY",
+        sirenActiveBadge: "🚨 Siren: BLARING ALERT"
+      },
+      bn: {
+        btn: "🌐 English",
+        title: "স্মার্ট ভূমিধস পর্যবেক্ষণ ও পূর্ব সতর্কবার্তা সিস্টেম",
+        loraBadge: "● লোরোওয়ান সক্রিয়",
+        labelTilt: "পাহাড়ের ঢাল বিচ্যুতি / হেলান",
+        targetTilt: "সীমা: ≤ ৫.০°",
+        labelMoisture: "মাটির আর্দ্রতা সম্পৃক্ততা",
+        moistureRange: "নিরাপদ মাত্রা: ≤ ৬৫.০%",
+        labelRain: "বৃষ্টিপাতের তীব্রতা",
+        unitRain: "মিমি/ঘণ্টা",
+        rainModel: "হাইড্রোলজিক্যাল সঞ্চিত গণনা",
+        labelRisk: "ভূমিধস ঝুঁকি সূচক",
+        porePressure: "পোর প্রেশার সেন্সর",
+        graphTitle: "রিয়েলটাইম ঢাল পরিবর্তন ও হেলান গ্রাফ (গত ৬০ মিনিট)",
+        critLimit: "৫.০° ঝুঁকিপূর্ণ ভূমিধস সীমা",
+        hysteresis: "MPU6050 + ইনক্লিনোমিটার ফিউশন ফিল্টার",
+        samplingEff: "টেলিমেট্রি ব্যবধান: ৫০০ms",
+        actuatorTitle: "জরুরি সতর্কীকরণ নিয়ন্ত্রণ",
+        pumpBtnNormal: "⚡ স্বয়ংক্রিয় ড্রেনেজ পাম্প চালু করুন",
+        pumpBtnActive: "⚡ অটো ড্রেনেজ সক্রিয় (জল নিষ্কাশন চলছে)",
+        sirenBtnOff: "🔊 ফিল্ড অ্যালার্ম সাইরেন বাজান",
+        sirenBtnOn: "🚨 সাইরেন সক্রিয় (বন্ধ করতে ট্যাপ করুন)",
+        simBtnNormal: "⚠️ ভূমিধস পরিস্থিতি সিমুলেট করুন",
+        simBtnActive: "🚨 ডাটা পুনর্স্থাপন করা হচ্ছে...",
+        mqttNote: "সতর্কবার্তাগুলি LoRa গেটওয়ে এবং এনক্রিপ্ট করা MQTT-এর মাধ্যমে জেলা দুর্যোগ ব্যবস্থাপনা সেল-এ পাঠানো হয়।",
+        auditTitle: "জিওটেকনিক্যাল টেলিমেট্রি অডিট লগ",
+        cmdNormal: "টেলিমেট্রি স্ট্যাটাস: স্বাভাবিক",
+
+        gyroStable: "জাইরো: স্থিতিশীল",
+        gyroActive: "পাম্প সক্রিয়",
+        gyroWarning: "ঢাল বিচ্যুতির শঙ্কা",
+        gyroCritical: "বিচ্যুতি ঝুঁকিপূর্ণ!",
+        trendStable: "কোনো গঠনগত পরিবর্তন নেই",
+        trendDrift: "সামান্য মাটির সরন শনাক্ত",
+        trendFast: "পাইপ দিয়ে জল নিষ্কাশন চলছে",
+        trendSpike: "ব্যাপক ভূমিধসের আশঙ্কা!",
+
+        moistureNormal: "আর্দ্রতা: স্বাভাবিক",
+        moistureSaturated: "আর্দ্রতা: অতিরিক্ত",
+        moistureCritical: "আর্দ্রতা: অত্যন্ত ঝুঁকিপূর্ণ",
+        soilFirm: "মাটির দৃঢ়তা স্বাভাবিক",
+        soilSoftening: "মাটির বাঁধন দুর্বল হচ্ছে",
+        soilLiquefaction: "মাটি তরলীকরণের ঝুঁকি!",
+
+        rainLight: "হালকা বৃষ্টিপাত",
+        rainMod: "মাঝারি বৃষ্টিপাত",
+        rainHeavy: "ভারী বৃষ্টিপাত",
+        noRunoff: "পাহাড়ি ঢলের ঝুঁকি নেই",
+        runoffRising: "ঢলের প্রবণতা বাড়ছে",
+        runoffHigh: "উচ্চ জল-সম্পৃক্ততা",
+
+        riskLow: "কম ঝুঁকি (নিরাপদ)",
+        riskMed: "মাঝারি ঝুঁকি (সতর্কতা)",
+        riskHigh: "উচ্চ ঝুঁকি (বিপদজনক)",
+        strataNormal: "ভূ-স্তর চাপ স্বাভাবিক",
+        strataStress: "ভূ-গর্ভস্থ চাপ বাড়ছে",
+        strataAnomaly: "⚠️ আশু ভূমিধসের সম্ভাবনা!",
+
+        sirenStandbyBadge: "📢 সাইরেন: প্রস্তুত",
+        sirenActiveBadge: "🚨 সাইরেন: বিপদ সংকেত বাজছে"
+      }
+    };
+
+    function toggleLanguage() {
+      isBengali = !isBengali;
+      const lang = isBengali ? 'bn' : 'en';
+
+      document.getElementById("langBtn").innerText = dict[lang].btn;
+      document.getElementById("uiTitle").childNodes[1].nodeValue = " " + dict[lang].title;
+      document.getElementById("uiLoraBadge").innerText = dict[lang].loraBadge;
+      document.getElementById("uiLabelTilt").innerText = dict[lang].labelTilt;
+      document.getElementById("uiTargetTilt").innerText = dict[lang].targetTilt;
+      document.getElementById("uiLabelMoisture").innerText = dict[lang].labelMoisture;
+      document.getElementById("uiMoistureRange").innerText = dict[lang].moistureRange;
+      document.getElementById("uiLabelRain").innerText = dict[lang].labelRain;
+      document.getElementById("uiRainModel").innerText = dict[lang].rainModel;
+      document.getElementById("uiLabelRisk").innerText = dict[lang].labelRisk;
+      document.getElementById("uiPorePressure").innerText = dict[lang].porePressure;
+      document.getElementById("uiGraphTitle").innerText = dict[lang].graphTitle;
+      document.getElementById("uiCritLimit").innerText = dict[lang].critLimit;
+      document.getElementById("uiHysteresis").innerText = dict[lang].hysteresis;
+      document.getElementById("uiSamplingEff").innerText = dict[lang].samplingEff;
+      document.getElementById("uiActuatorTitle").innerText = dict[lang].actuatorTitle;
+      document.getElementById("uiMqttNote").innerText = dict[lang].mqttNote;
+      document.getElementById("uiAuditTitle").innerText = dict[lang].auditTitle;
+
+      const pumpBtn = document.getElementById("drainageBtn");
+      pumpBtn.innerText = isPumpOn ? dict[lang].pumpBtnActive : dict[lang].pumpBtnNormal;
+
+      const sirenBtn = document.getElementById("sirenBtn");
+      sirenBtn.innerText = isSirenOn ? dict[lang].sirenBtnOn : dict[lang].sirenBtnOff;
+
+      const simBtn = document.getElementById("simFaultBtn");
+      simBtn.innerText = isShiftSim ? dict[lang].simBtnActive : dict[lang].simBtnNormal;
+
+      const sirenBadge = document.getElementById("headerSirenBadge");
+      sirenBadge.innerText = isSirenOn ? dict[lang].sirenActiveBadge : dict[lang].sirenStandbyBadge;
+
+      updateTelemetry();
+    }
+
+    function addAuditLog(msg, color = "#cbd5e1") {
+      const container = document.getElementById("logContainer");
+      if (!container) return;
+      const timeStr = new Date().toLocaleTimeString();
+      const div = document.createElement("div");
+      div.style.color = color;
+      div.innerText = `[${timeStr}] ${msg}`;
+      container.insertBefore(div, container.firstChild);
+    }
+
+    function toggleDrainagePump() {
+      isPumpOn = !isPumpOn;
+      const btn = document.getElementById("drainageBtn");
+      const lang = isBengali ? 'bn' : 'en';
+      if (isPumpOn) {
+        btn.classList.add("active");
+        btn.innerText = dict[lang].pumpBtnActive;
+        addAuditLog("MANUAL OVERRIDE: Drainage pump manually activated by operator.", "#38bdf8");
+      } else {
+        btn.classList.remove("active");
+        btn.innerText = dict[lang].pumpBtnNormal;
+        addAuditLog("MANUAL OVERRIDE: Drainage pump turned OFF.", "#94a3b8");
+      }
+    }
+
+    function toggleSiren() {
+      isSirenOn = !isSirenOn;
+      const badge = document.getElementById("headerSirenBadge");
+      const btn = document.getElementById("sirenBtn");
+      const lang = isBengali ? 'bn' : 'en';
+
+      if (isSirenOn) {
+        badge.innerText = dict[lang].sirenActiveBadge;
+        badge.className = "badge-lid siren-on";
+        btn.className = "btn btn-lid open";
+        btn.innerText = dict[lang].sirenBtnOn;
+        addAuditLog("EMERGENCY ALERT: High-decibel field siren & stroboscopes activated!", "#fb7185");
+      } else {
+        badge.innerText = dict[lang].sirenStandbyBadge;
+        badge.className = "badge-lid siren-off";
+        btn.className = "btn btn-lid";
+        btn.innerText = dict[lang].sirenBtnOff;
+        addAuditLog("SYSTEM: Warning siren muted by operator command.", "#34d399");
+      }
+    }
+
+    function toggleSimulateFault() {
+      isShiftSim = !isShiftSim;
+      const btn = document.getElementById("simFaultBtn");
+      const lang = isBengali ? 'bn' : 'en';
+      if (isShiftSim) {
+        btn.classList.add("spiking");
+        btn.innerText = dict[lang].simBtnActive;
+        addAuditLog("SIMULATION: Heavy rainfall & soil saturation simulated!", "#fb7185");
+      } else {
+        btn.classList.remove("spiking");
+        btn.innerText = dict[lang].simBtnNormal;
+        addAuditLog("RECOVERY: Sensors stabilizing back to baseline values.", "#34d399");
+      }
+    }
+
+    function updateTelemetry() {
+      const lang = isBengali ? 'bn' : 'en';
+
+      // 1. GRADUAL SENSOR VALUE TRANSITIONS
+      if (isShiftSim) {
+        if (currentMoisture < 85.0) currentMoisture += 2.2;
+        if (currentTilt < 6.50) currentTilt += 0.20;
+        if (currentRain < 75.0) currentRain += 3.0;
+      } else if (isPumpOn) {
+        // Pump chalate jol ar maatir moisture aste aste kombe
+        if (currentMoisture > 35.0) currentMoisture -= 1.6;
+        if (currentTilt > 1.12) currentTilt -= 0.12;
+        if (currentRain > 12.5) currentRain -= 1.5;
+      } else {
+        // Normal baseline recovery
+        if (currentMoisture > 38.4) currentMoisture -= 0.8;
+        else if (currentMoisture < 38.4) currentMoisture += 0.4;
+
+        if (currentTilt > 1.12) currentTilt -= 0.08;
+        else if (currentTilt < 1.12) currentTilt += 0.04;
+
+        if (currentRain > 12.5) currentRain -= 1.0;
+        else if (currentRain < 12.5) currentRain += 0.5;
+      }
+
+      // 2. AUTO DRAINAGE & PIPE ACTIVATION LOGIC
+      const pumpBtn = document.getElementById("drainageBtn");
+      if (currentMoisture >= 55.0 && !isPumpOn) {
+        isPumpOn = true;
+        pumpBtn.classList.add("active");
+        pumpBtn.innerText = dict[lang].pumpBtnActive;
+        addAuditLog("AUTO-ACTUATOR: Excess soil moisture detected! Auto Drainage Pump engaged via Pipe System.", "#38bdf8");
+      } else if (currentMoisture <= 40.0 && isPumpOn && !isShiftSim) {
+        isPumpOn = false;
+        pumpBtn.classList.remove("active");
+        pumpBtn.innerText = dict[lang].pumpBtnNormal;
+        addAuditLog("AUTO-ACTUATOR: Soil moisture restored to safe levels. Pump automatically switched OFF.", "#34d399");
+      }
+
+      // 3. UI DISPLAY UPDATES
+      // Tilt Display
+      const tiltDisplay = document.getElementById("tiltDisplay");
+      tiltDisplay.innerText = currentTilt.toFixed(2);
+      const tiltBadge = document.getElementById("tiltStateBadge");
+      const tiltTrend = document.getElementById("tiltTrend");
+
+      if (currentTilt >= 5.0) {
+        tiltBadge.innerText = dict[lang].gyroCritical;
+        tiltBadge.style.cssText = "background:#4c0519; color:#fb7185; border:1px solid #be123c;";
+        tiltDisplay.parentElement.style.color = "#f43f5e";
+        tiltTrend.innerText = dict[lang].trendSpike;
+        tiltTrend.style.color = "#f43f5e";
+      } else if (currentTilt >= 2.8) {
+        tiltBadge.innerText = dict[lang].gyroWarning;
+        tiltBadge.style.cssText = "background:#451a03; color:#fbbf24; border:1px solid #d97706;";
+        tiltDisplay.parentElement.style.color = "#fbbf24";
+        tiltTrend.innerText = dict[lang].trendDrift;
+        tiltTrend.style.color = "#fbbf24";
+      } else if (isPumpOn) {
+        tiltBadge.innerText = dict[lang].gyroActive;
+        tiltBadge.style.cssText = "background:#164e63; color:#67e8f9; border:1px solid #0891b2;";
+        tiltDisplay.parentElement.style.color = "#38bdf8";
+        tiltTrend.innerText = dict[lang].trendFast;
+        tiltTrend.style.color = "#38bdf8";
+      } else {
+        tiltBadge.innerText = dict[lang].gyroStable;
+        tiltBadge.style.cssText = "background:#082f49; color:#38bdf8; border:1px solid #0369a1;";
+        tiltDisplay.parentElement.style.color = "#38bdf8";
+        tiltTrend.innerText = dict[lang].trendStable;
+        tiltTrend.style.color = "#34d399";
+      }
+
+      // Moisture Display
+      document.getElementById("moistureDisplay").innerText = currentMoisture.toFixed(1);
+      const moistureBadge = document.getElementById("moistureStatusBadge");
+      const moistureSubText = document.getElementById("moistureSubText");
+
+      if (currentMoisture >= 70.0) {
+        moistureBadge.innerText = dict[lang].moistureCritical;
+        moistureBadge.style.cssText = "background:#4c0519; color:#fb7185; border:1px solid #e11d48;";
+        moistureSubText.innerText = dict[lang].soilLiquefaction;
+        moistureSubText.style.color = "#fb7185";
+      } else if (currentMoisture >= 50.0) {
+        moistureBadge.innerText = dict[lang].moistureSaturated;
+        moistureBadge.style.cssText = "background:#451a03; color:#fbbf24; border:1px solid #d97706;";
+        moistureSubText.innerText = dict[lang].soilSoftening;
+        moistureSubText.style.color = "#fbbf24";
+      } else {
+        moistureBadge.innerText = dict[lang].moistureNormal;
+        moistureBadge.style.cssText = "background:#064e3b; color:#34d399; border:1px solid #059669;";
+        moistureSubText.innerText = dict[lang].soilFirm;
+        moistureSubText.style.color = "#94a3b8";
+      }
+
+      // Rain Display
+      const rainDisplay = document.getElementById("rainDisplay");
+      const rainBadge = document.getElementById("rainRateBadge");
+      const rainSubText = document.getElementById("rainSubText");
+
+      rainDisplay.innerText = currentRain.toFixed(1);
+      if (currentRain >= 50.0) {
+        rainDisplay.parentElement.style.color = "#f43f5e";
+        rainBadge.innerText = dict[lang].rainHeavy;
+        rainBadge.style.cssText = "background:#4c0519; color:#fb7185;";
+        rainSubText.innerText = dict[lang].runoffHigh;
+        rainSubText.style.color = "#fb7185";
+      } else if (currentRain >= 25.0) {
+        rainDisplay.parentElement.style.color = "#fbbf24";
+        rainBadge.innerText = dict[lang].rainMod;
+        rainBadge.style.cssText = "background:#451a03; color:#fbbf24;";
+        rainSubText.innerText = dict[lang].runoffRising;
+        rainSubText.style.color = "#fbbf24";
+      } else {
+        rainDisplay.parentElement.style.color = "#ffffff";
+        rainBadge.innerText = dict[lang].rainLight;
+        rainBadge.style.cssText = "background:#1e293b; color:#cbd5e1;";
+        rainSubText.innerText = dict[lang].noRunoff;
+        rainSubText.style.color = "#34d399";
+      }
+
+      // Dynamic Risk Index Calculation
+      let tiltWeight = (currentTilt / 6.0) * 45;
+      let moistureWeight = (currentMoisture / 90.0) * 35;
+      let rainWeight = (currentRain / 80.0) * 20;
+
+      let calculatedRisk = Math.min(98, Math.max(12, Math.floor(tiltWeight + moistureWeight + rainWeight)));
+
+      const riskScore = document.getElementById("riskScore");
+      const riskBadge = document.getElementById("riskBadge");
+      const strataStatus = document.getElementById("strataStatus");
+
+      riskScore.innerText = calculatedRisk;
+
+      if (calculatedRisk >= 65) {
+        riskScore.parentElement.style.color = "#f43f5e";
+        riskBadge.innerText = dict[lang].riskHigh;
+        riskBadge.style.cssText = "background:#4c0519; color:#fb7185; border:1px solid #be123c;";
+        strataStatus.innerText = dict[lang].strataAnomaly;
+        strataStatus.style.color = "#f43f5e";
+
+        // Emergency Siren Trigger on High Risk
+        if (!isSirenOn) {
+          toggleSiren();
+        }
+      } else if (calculatedRisk >= 38) {
+        riskScore.parentElement.style.color = "#fbbf24";
+        riskBadge.innerText = dict[lang].riskMed;
+        riskBadge.style.cssText = "background:#451a03; color:#fbbf24; border:1px solid #d97706;";
+        strataStatus.innerText = dict[lang].strataStress;
+        strataStatus.style.color = "#fbbf24";
+      } else {
+        riskScore.parentElement.style.color = "#34d399";
+        riskBadge.innerText = dict[lang].riskLow;
+        riskBadge.style.cssText = "background:#064e3b; color:#34d399; border:1px solid #059669;";
+        strataStatus.innerText = dict[lang].strataNormal;
+        strataStatus.style.color = "#94a3b8";
+      }
+
+      historyData.push(currentTilt);
+      historyData.shift();
+      drawChart();
+    }
+
+    function drawChart() {
+      const canvas = document.getElementById("thermalChart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = 160;
+
+      const w = canvas.width;
+      const h = canvas.height;
+      const padding = 20;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Critical Limit Line
+      const criticalY = h - padding - ((5.0 - 0.0) / (10.0 - 0.0)) * (h - padding * 2);
+      ctx.beginPath();
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = "rgba(244, 63, 94, 0.6)";
+      ctx.lineWidth = 1.5;
+      ctx.moveTo(padding, criticalY);
+      ctx.lineTo(w - padding, criticalY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Draw Slope Curve
+      const minVal = 0.0;
+      const maxVal = 10.0;
+      const stepX = (w - padding * 2) / (historyData.length - 1);
+
+      ctx.beginPath();
+      historyData.forEach((val, i) => {
+        const x = padding + i * stepX;
+        const normalizedY = (val - minVal) / (maxVal - minVal);
+        const y = h - padding - normalizedY * (h - padding * 2);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+
+      ctx.strokeStyle = currentTilt >= 5.0 ? "#f43f5e" : (currentTilt >= 2.8 ? "#fbbf24" : "#38bdf8");
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Data Points
+      historyData.forEach((val, i) => {
+        const x = padding + i * stepX;
+        const normalizedY = (val - minVal) / (maxVal - minVal);
+        const y = h - padding - normalizedY * (h - padding * 2);
+        ctx.beginPath();
+        ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = val >= 5.0 ? "#f43f5e" : (val >= 2.8 ? "#fbbf24" : "#38bdf8");
+        ctx.fill();
+      });
+    }
+
+    setInterval(updateTelemetry, 1800);
+    window.addEventListener("resize", drawChart);
+    window.onload = () => {
+      drawChart();
+      updateTelemetry();
+    };
+  </script>
+</body>
+</html>
